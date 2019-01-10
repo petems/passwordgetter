@@ -7,6 +7,8 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
+//go:generate mockgen -destination=../mocks/mock_getter.go -package=mocks github.com/petems/passwordgetter/cmd PasswordReader
+
 // PasswordReader returns password read from a reader
 type PasswordReader interface {
 	ReadPassword() (string, error)

@@ -26,12 +26,12 @@ lint: ## Verifies `golint` passes
 
 .PHONY: cover
 cover: ## Runs go test with coverage
-	@for d in $(shell go list ./... | grep -v vendor); do \
+	@for d in $(shell go list ./... | grep -v vendor | grep -v mocks); do \
 		go test -race -coverprofile=profile.out -covermode=atomic "$$d"; \
 	done;
 
 .PHONY: cover_html
-cover_html: ## Runs go test with coverage
+cover_html: cover ## Opens html of coverage
 	@go tool cover -html=profile.out
 
 .PHONY: clean
@@ -44,6 +44,10 @@ clean: ## Cleanup any build binaries or packages
 test: ## Runs the go tests
 	@echo "+ $@"
 	@go test ./...
+
+.PHONY: generate
+generate: ## runs generate for mocks
+	@go generate ./...
 
 .PHONY: install
 install: ## Installs the executable or package

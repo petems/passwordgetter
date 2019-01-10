@@ -1,45 +1,57 @@
 package cmd_test
 
 import (
-	"errors"
 	"testing"
+	"errors"
 
+	"github.com/golang/mock/gomock"
+
+	"github.com/petems/passwordgetter/mocks"
 	"github.com/petems/passwordgetter/cmd"
 	"github.com/stretchr/testify/assert"
 )
 
-type errorPasswordReader struct {
-}
+func TestRunReturnsStringFromReadPassword(t *testing.T) {
 
-func (pr errorPasswordReader) ReadPassword() (string, error) {
-	return "", errors.New("stubbed error")
-}
+	mockCtrl := gomock.NewController(t)
+  defer mockCtrl.Finish()
 
-type stubPasswordReader struct {
-	Password string
-}
+  mockPasswordReader := mocks.NewMockPasswordReader(mockCtrl)
 
-func (pr stubPasswordReader) ReadPassword() (string, error) {
-	return pr.Password, nil
-}
+  mockPasswordReader.EXPECT().ReadPassword().Return("hunter2", nil).Times(1)
 
-func TestRunReturnsErrorWhenReadPasswordFails(t *testing.T) {
-	var errorReader errorPasswordReader
-	result, err := cmd.Run(errorReader)
-	assert.Equal(t, errors.New("stubbed error"), err)
-	assert.Equal(t, "", result)
-}
-
-func TestRunReturnsPasswordInput(t *testing.T) {
-	pr := stubPasswordReader{Password: "password"}
-	result, err := cmd.Run(pr)
+	result, err := cmd.Run(mockPasswordReader)
 	assert.NoError(t, err)
-	assert.Equal(t, "password", result)
+	assert.Equal(t, "hunter2", result)
 }
 
-func TestRunReturnsErrorWhenEmptyPasswordIsProvided(t *testing.T) {
-	pr := stubPasswordReader{Password: ""}
-	result, err := cmd.Run(pr)
+func TestRunReturnsErrorWhenEmptyString(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+  defer mockCtrl.Finish()
+
+  mockPasswordReader := mocks.NewMockPasswordReader(mockCtrl)
+
+  mockPasswordReader.EXPECT().ReadPassword().Return("", nil).Times(1)
+
+	result, err := cmd.Run(mockPasswordReader)
 	assert.Error(t, err)
 	assert.Equal(t, "", result)
 }
+
+func TestRunReturnsErrorWhenReadPasswordReturnsError(t *testing.T) {
+
+	mockCtrl := gomock.NewController(t)
+  defer mockCtrl.Finish()
+
+  mockPasswordReader := mocks.NewMockPasswordReader(mockCtrl)
+
+  mockPasswordReader.EXPECT().ReadPassword().Return("", errors.New("stubbed error")).Times(1)
+
+	result, err := cmd.Run(mockPasswordReader)
+	assert.Error(t, err)
+	assert.Equal(t, "", result)
+}
+
+
+
